@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataForm xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.enova.pl/schema/form.xsd"
+          DataType="PNWB_Extra.UI.Models.TokenyCalaEnovaRoot, PNWB_Extra.UI">
+  <Page CaptionHtml="Ogólne" DataContext="{DataSource}">
+    <Row>
+      <Grid Width="*" Height="*" EditValue="{ViewInfo}" IsToolbarVisible="true" EditButton="Auto" UpdateButton="None" NewButton="None" RemoveButton="None" EditInPlace="true" ForceEditInPlace="true" AllowCellSelection="true" SortAfterEditInPlace="true">
+        <Field CaptionHtml="Nazwa firmy" Width="24" EditValue="{NazwaFirmy}" Footer="None" />
+        <Field CaptionHtml="ID" Width="8" EditValue="{ID}" Footer="None" />
+        <Field CaptionHtml="Guid" Width="24" EditValue="{Guid}" Footer="None" />
+        <Field CaptionHtml="SystemZewn" Width="10" EditValue="{SystemZewn}" Footer="None" />
+        <Field CaptionHtml="Nazwa" Width="14" EditValue="{Nazwa}" Footer="None" />
+        <Field CaptionHtml="Token" Width="26" EditValue="{Token}" Footer="None" />
+        <Field CaptionHtml="Pobieranie" Width="9" EditValue="{Pobieranie}" Footer="None" />
+        <Field CaptionHtml="Wysyłanie" Width="9" EditValue="{Wysylanie}" Footer="None" />
+        <Field CaptionHtml="Stamp" Width="16" EditValue="{Stamp}" Footer="None" />
+        <Field CaptionHtml="OperatorzyGuids" Width="20" EditValue="{OperatorzyGuids}" Footer="None" />
+        <Field CaptionHtml="RefreshTokenValidUntil" Width="16" EditValue="{RefreshTokenValidUntil}" Footer="None" />
+        <Field CaptionHtml="RefreshTokenValue" Width="20" EditValue="{RefreshTokenValue}" Footer="None" />
+        <Field CaptionHtml="RefreshTokenRequestRefNumber" Width="16" EditValue="{RefreshTokenRequestRefNumber}" Footer="None" />
+        <Field CaptionHtml="RefreshTokenRequestTempTokenValue" Width="20" EditValue="{RefreshTokenRequestTempTokenValue}" Footer="None" />
+        <Field CaptionHtml="WersjaAPI" Width="10" EditValue="{WersjaAPI}" Footer="None" />
+        <Field CaptionHtml="Rodzaj" Width="8" EditValue="{Rodzaj}" Footer="None" />
+        <Field CaptionHtml="Certyfikat" Width="20" EditValue="{Certyfikat}" Footer="None" />
+        <Field CaptionHtml="CertyfikatKey" Width="20" EditValue="{CertyfikatKey}" Footer="None" />
+        <Field CaptionHtml="CertyfikatHasloValue" Width="20" EditValue="{CertyfikatHasloValue}" Footer="None" />
+        <Field CaptionHtml="Przeznaczenie" Width="10" EditValue="{Przeznaczenie}" Footer="None" />
+      </Grid>
+    </Row>
+  </Page>
+</DataForm>

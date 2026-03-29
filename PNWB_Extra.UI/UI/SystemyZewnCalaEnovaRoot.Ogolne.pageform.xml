@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataForm xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.enova.pl/schema/form.xsd"
+          DataType="PNWB_Extra.UI.Models.SystemyZewnCalaEnovaRoot, PNWB_Extra.UI">
+  <Page CaptionHtml="Ogólne" DataContext="{DataSource}">
+    <Row>
+      <Field CaptionHtml="Symbol" Width="22" EditValue="{SymbolFilter}" />
+      <Field CaptionHtml="Blokada" Width="16" EditValue="{BlokadaFilter}" />
+    </Row>
+    <Row>
+      <Grid Name="ListSystemyZewnV3" Width="*" Height="*" EditValue="{ViewInfo}" IsToolbarVisible="true" EditButton="Auto" UpdateButton="None" NewButton="None" RemoveButton="None" EditInPlace="true" ForceEditInPlace="true" AllowCellSelection="true" SortAfterEditInPlace="true">
+        <Field CaptionHtml="Nazwa firmy" Width="26" EditValue="{NazwaFirmy}" Footer="None" />
+        <Field CaptionHtml="ID" Width="8" EditValue="{ID}" Footer="None" />
+        <Field CaptionHtml="Guid" Width="24" EditValue="{Guid}" Footer="None" />
+        <Field CaptionHtml="Typ" Width="14" EditValue="{Typ}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="Symbol" Width="16" EditValue="{Symbol}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="Opis" Width="30" EditValue="{Opis}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="Blokada" Width="10" EditValue="{Blokada}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="Stamp" Width="16" EditValue="{Stamp}" Footer="None" />
+        <Field CaptionHtml="Kontrahent" Width="12" EditValue="{Kontrahent}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="KontrahentType" Width="16" EditValue="{KontrahentType}" ReadOnly="false" Footer="None" />
+        <Field CaptionHtml="Domyślny" Width="10" EditValue="{Domyslny}" ReadOnly="false" Footer="None" />
+      </Grid>
+    </Row>
+  </Page>
+</DataForm>

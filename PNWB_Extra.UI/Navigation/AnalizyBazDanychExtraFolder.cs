@@ -1,5 +1,6 @@
 using Soneta.Business.UI;
 using PNWB_Extra.UI.ViewInfos;
+using PNWB_Extra.UI.Models;
 
 [assembly: FolderView("Analizy baz danych Extra",
     Priority = 990,
@@ -14,4 +15,34 @@ using PNWB_Extra.UI.ViewInfos;
     Description = "Analizy oraz czynności wykonywane na zarejestrowanych bazach danych",
     IconName = "wykres",
     ViewType = typeof(AnalizyBazDanychExtraViewInfo))]
+
+[assembly: FolderView("Analizy baz danych Extra/Systemy zewnętrzne cała enova",
+    Priority = 20,
+    GroupIndex = 1,
+    Description = "Zbiorczy widok tabeli SystemyZewn ze wszystkich baz enova",
+    IconName = "global",
+    ObjectType = typeof(SystemyZewnCalaEnovaRoot),
+    ObjectPage = "SystemyZewnCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
+
+[assembly: FolderView("Analizy baz danych Extra/Tokeny cała enova",
+    Priority = 30,
+    GroupIndex = 1,
+    Description = "Zbiorczy widok tabeli SysZewTokeny ze wszystkich baz enova",
+    IconName = "klucz",
+    ObjectType = typeof(TokenyCalaEnovaRoot),
+    ObjectPage = "TokenyCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
+
+[assembly: FolderView("Analizy baz danych Extra/Dynamiczne dane cała enova",
+    Priority = 40,
+    GroupIndex = 1,
+    Description = "Dynamiczny podgląd danych z wybranej tabeli lub widoku SQL ze wszystkich baz enova",
+    IconName = "sql",
+    ObjectType = typeof(DynamiczneDaneCalaEnovaRoot),
+    ObjectPage = "DynamiczneDaneCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
 namespace PNWB_Extra.UI.Navigation;

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataForm xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.enova.pl/schema/form.xsd"
+          DataType="PNWB_Extra.UI.Models.DynamiczneDaneCalaEnovaRoot, PNWB_Extra.UI">
+  <Page CaptionHtml="Ogólne" DataContext="{DataSource}">
+    <Row>
+      <Field CaptionHtml="Tabela / Widok" Width="36" EditValue="{ObiektSql}" />
+      <Field CaptionHtml="Kolumna" Width="24" EditValue="{KolumnaSql}" />
+    </Row>
+    <Row>
+      <Field CaptionHtml="Where kolumna" Width="24" EditValue="{WhereKolumna}" />
+      <Field CaptionHtml="Operator" Width="14" EditValue="{WhereOperator}" />
+      <Field CaptionHtml="Wartość" Width="26" EditValue="{WhereWartosc}" />
+    </Row>
+    <Row>
+      <Grid Name="ListDynamiczneDaneV3" Width="*" Height="*" EditValue="{ViewInfo}" IsToolbarVisible="true" EditButton="Auto" UpdateButton="None" NewButton="None" RemoveButton="None" EditInPlace="true" ForceEditInPlace="true" AllowCellSelection="true" SortAfterEditInPlace="true">
+      </Grid>
+    </Row>
+  </Page>
+</DataForm>

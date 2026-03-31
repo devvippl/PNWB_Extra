@@ -20,6 +20,7 @@ public sealed class AnalizyBazDanychExtraViewInfo : ViewInfo
 
     private static void AnalizyBazDanychExtraViewInfo_InitContext(object sender, ContextEventArgs args)
     {
+        DBItemsObliczExtraWorker.EnsureCustomCalculatedPropertiesRegistered();
         args.Context.TryAdd(() => new DBItems.Params(args.Context));
         args.Context.TryAdd(() => new AnalizyBazDanychExtraContextMarker());
     }
@@ -32,7 +33,7 @@ public sealed class AnalizyBazDanychExtraViewInfo : ViewInfo
         args.View.AllowRemove = false;
         foreach (DBItem item in args.View.Cast<DBItem>())
         {
-            DBItemsObliczExtraWorker.InitializeCalculatedPlaceholders(item);
+            DBItemsObliczExtraWorker.InitializeCalculatedPlaceholders(item, parameters.Aktualny, parameters.Okres);
         }
     }
 

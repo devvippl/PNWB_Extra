@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using PNWB_Extra.UI.ViewInfos;
 using Microsoft.Data.SqlClient;
 using Soneta.Business;
@@ -20,6 +21,10 @@ namespace PNWB_Extra.UI.Workers;
 
 public sealed class DBItemsObliczExtraWorker
 {
+    private static readonly object cacheSync = new object();
+    private static string cachedScopeKey = string.Empty;
+    private static Dictionary<string, Dictionary<string, string>> cachedValuesByDatabase = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
     private sealed class DbCalculatedStatuses
     {
         public int? StatusJpkInt { get; init; }
@@ -39,6 +44,10 @@ public sealed class DBItemsObliczExtraWorker
         public bool? DeklaracjaCit8Bufor { get; init; }
 
         public int? EDeklaracjaCit8Int { get; init; }
+
+        public bool? DeklaracjaIftBufor { get; init; }
+
+        public int? EDeklaracjaIftInt { get; init; }
     }
 
     private Context context;
@@ -67,8 +76,15 @@ public sealed class DBItemsObliczExtraWorker
         return cx.Contains(typeof(AnalizyBazDanychExtraContextMarker));
     }
 
-    public static void InitializeCalculatedPlaceholders(DBItem item)
+    public static void InitializeCalculatedPlaceholders(DBItem item, Date aktualny, FromTo okres)
     {
+        EnsureCustomCalculatedPropertiesRegistered();
+        if (TryGetCachedValues(item.Name, aktualny, okres, out Dictionary<string, string> cachedValues))
+        {
+            SetCalculatedValues(item, cachedValues, aktualny, okres, updateCalculationMetadata: false);
+            return;
+        }
+
         SetCalculatedValues(item, new Dictionary<string, string>(StringComparer.Ordinal), Date.Empty, FromTo.Empty, updateCalculationMetadata: false);
     }
 
@@ -91,6 +107,11 @@ public sealed class DBItemsObliczExtraWorker
         int eDeklaracjaPit4RCount = 0;
         int deklaracjaCit8Count = 0;
         int eDeklaracjaCit8Count = 0;
+        int deklaracjaIftCount = 0;
+        int eDeklaracjaIftCount = 0;
+
+        string scopeKey = BuildScopeKey(okresContext.Aktualny, okresContext.Okres);
+        Dictionary<string, Dictionary<string, string>> newCacheByDb = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
         Stopwatch uiStopwatch = Stopwatch.StartNew();
 
@@ -109,6 +130,8 @@ public sealed class DBItemsObliczExtraWorker
             string eDeklaracjaPit4R = ToEDeklaracjaStatusCaption(row.EDeklaracjaPit4RInt);
             string deklaracjaCit8 = ToDeklaracjaStatus(row.DeklaracjaCit8Bufor);
             string eDeklaracjaCit8 = ToEDeklaracjaStatusCaption(row.EDeklaracjaCit8Int);
+            string deklaracjaIft = ToDeklaracjaStatus(row.DeklaracjaIftBufor);
+            string eDeklaracjaIft = ToEDeklaracjaStatusCaption(row.EDeklaracjaIftInt);
 
             if (statusJpk != "Brak") statusJpkCount++;
             if (deklaracjaVatue != "Brak") deklaracjaVatueCount++;
@@ -119,6 +142,8 @@ public sealed class DBItemsObliczExtraWorker
             if (eDeklaracjaPit4R != "Brak") eDeklaracjaPit4RCount++;
             if (deklaracjaCit8 != "Brak") deklaracjaCit8Count++;
             if (eDeklaracjaCit8 != "Brak") eDeklaracjaCit8Count++;
+            if (deklaracjaIft != "Brak") deklaracjaIftCount++;
+            if (eDeklaracjaIft != "Brak") eDeklaracjaIftCount++;
 
             Dictionary<string, string> valuesToSet = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -130,12 +155,21 @@ public sealed class DBItemsObliczExtraWorker
                 ["DeklaracjaPIT4R"] = deklaracjaPit4R,
                 ["EDeklaracjaPIT4R"] = eDeklaracjaPit4R,
                 ["DeklaracjaCIT8"] = deklaracjaCit8,
-                ["EDeklaracjaCIT8"] = eDeklaracjaCit8
+                ["EDeklaracjaCIT8"] = eDeklaracjaCit8,
+                ["DeklaracjaIFT"] = deklaracjaIft,
+                ["EDeklaracjaIFT"] = eDeklaracjaIft
             };
+            newCacheByDb[item.Name] = new Dictionary<string, string>(valuesToSet, StringComparer.Ordinal);
 
             using ITransaction transaction = context.Session.Logout(editMode: true);
             SetCalculatedValues(item, valuesToSet, okresContext.Aktualny, okresContext.Okres);
             transaction.CommitUI();
+        }
+
+        lock (cacheSync)
+        {
+            cachedScopeKey = scopeKey;
+            cachedValuesByDatabase = newCacheByDb;
         }
 
         uiStopwatch.Stop();
@@ -144,8 +178,8 @@ public sealed class DBItemsObliczExtraWorker
         Log log = new Log("Analizy baz danych Extra SQL", open: true);
         log.WriteLine("Oblicz Extra SQL: bazy={0}, SQL={1} ms, UI={2} ms, razem={3} ms",
             items.Length, sqlStopwatch.ElapsedMilliseconds, uiStopwatch.ElapsedMilliseconds, totalStopwatch.ElapsedMilliseconds);
-        log.WriteLine("Wyniki != Brak: StatusJPK={0}, DeklaracjaVATUE={1}, EDeklaracjaVATUE={2}, DeklaracjaPIT8AR={3}, EDeklaracjaPIT8AR={4}, DeklaracjaPIT4R={5}, EDeklaracjaPIT4R={6}, DeklaracjaCIT8={7}, EDeklaracjaCIT8={8}",
-            statusJpkCount, deklaracjaVatueCount, eDeklaracjaVatueCount, deklaracjaPit8ArCount, eDeklaracjaPit8ArCount, deklaracjaPit4RCount, eDeklaracjaPit4RCount, deklaracjaCit8Count, eDeklaracjaCit8Count);
+        log.WriteLine("Wyniki != Brak: StatusJPK={0}, DeklaracjaVATUE={1}, EDeklaracjaVATUE={2}, DeklaracjaPIT8AR={3}, EDeklaracjaPIT8AR={4}, DeklaracjaPIT4R={5}, EDeklaracjaPIT4R={6}, DeklaracjaCIT8={7}, EDeklaracjaCIT8={8}, DeklaracjaIFT={9}, EDeklaracjaIFT={10}",
+            statusJpkCount, deklaracjaVatueCount, eDeklaracjaVatueCount, deklaracjaPit8ArCount, eDeklaracjaPit8ArCount, deklaracjaPit4RCount, eDeklaracjaPit4RCount, deklaracjaCit8Count, eDeklaracjaCit8Count, deklaracjaIftCount, eDeklaracjaIftCount);
     }
 
     private DBItem[] GetItems()
@@ -194,7 +228,8 @@ public sealed class DBItemsObliczExtraWorker
         command.Parameters.Add(new SqlParameter("@TypVATUE", SqlDbType.Int) { Value = GetTypDeklaracjiValue("VATUE") });
         command.Parameters.Add(new SqlParameter("@TypPIT8A", SqlDbType.Int) { Value = GetTypDeklaracjiValue("PIT8A") });
         command.Parameters.Add(new SqlParameter("@TypPIT4", SqlDbType.Int) { Value = GetTypDeklaracjiValue("PIT4") });
-        command.Parameters.Add(new SqlParameter("@TypCIT8", SqlDbType.Int) { Value = GetTypDeklaracjiValue("CIT8") });
+        command.Parameters.Add(new SqlParameter("@TypCIT8Csv", SqlDbType.NVarChar, -1) { Value = string.Join(",", GetTypDeklaracjiValuesByPrefix("CIT8", fallbackEnumName: "CIT8")) });
+        command.Parameters.Add(new SqlParameter("@TypIFTCsv", SqlDbType.NVarChar, -1) { Value = string.Join(",", GetTypDeklaracjiValuesByPrefix("IFT")) });
 
         using SqlDataReader reader = command.ExecuteReader();
         while (reader.Read())
@@ -210,7 +245,9 @@ public sealed class DBItemsObliczExtraWorker
                 DeklaracjaPit4RBufor = reader.IsDBNull(6) ? null : reader.GetBoolean(6),
                 EDeklaracjaPit4RInt = reader.IsDBNull(7) ? null : reader.GetInt32(7),
                 DeklaracjaCit8Bufor = reader.IsDBNull(8) ? null : reader.GetBoolean(8),
-                EDeklaracjaCit8Int = reader.IsDBNull(9) ? null : reader.GetInt32(9)
+                EDeklaracjaCit8Int = reader.IsDBNull(9) ? null : reader.GetInt32(9),
+                DeklaracjaIftBufor = reader.IsDBNull(10) ? null : reader.GetBoolean(10),
+                EDeklaracjaIftInt = reader.IsDBNull(11) ? null : reader.GetInt32(11)
             };
         }
 
@@ -241,12 +278,12 @@ public sealed class DBItemsObliczExtraWorker
 BEGIN TRY
     IF DB_ID(N'{dbLiteral}') IS NULL
     BEGIN
-        INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int)
-        VALUES (N'{dbLiteral}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int, DeklaracjaIFTBufor, EDeklaracjaIFTInt)
+        VALUES (N'{dbLiteral}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     END
     ELSE
     BEGIN
-        INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int)
+        INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int, DeklaracjaIFTBufor, EDeklaracjaIFTInt)
         SELECT N'{dbLiteral}',
                (
                    SELECT TOP (1) j.StatusJPK
@@ -311,7 +348,11 @@ BEGIN TRY
                (
                    SELECT TOP (1) CAST(d.Bufor AS bit)
                    FROM {dbQuoted}.dbo.Deklaracje d
-                   WHERE d.Typ = @TypCIT8
+                   WHERE d.Typ IN (
+                         SELECT TRY_CONVERT(int, LTRIM(RTRIM(S.value)))
+                         FROM string_split(@TypCIT8Csv, N',') AS S
+                         WHERE TRY_CONVERT(int, LTRIM(RTRIM(S.value))) IS NOT NULL
+                   )
                      AND d.Zrodlo IS NULL
                      AND d.OkresTo >= @OkresFrom
                      AND d.OkresTo <= @OkresTo
@@ -320,7 +361,36 @@ BEGIN TRY
                (
                    SELECT TOP (1) e.StatusEDeklaracji
                    FROM {dbQuoted}.dbo.EDeklaracje e
-                   WHERE e.TypDeklaracji = @TypCIT8
+                   WHERE e.TypDeklaracji IN (
+                         SELECT TRY_CONVERT(int, LTRIM(RTRIM(S.value)))
+                         FROM string_split(@TypCIT8Csv, N',') AS S
+                         WHERE TRY_CONVERT(int, LTRIM(RTRIM(S.value))) IS NOT NULL
+                   )
+                     AND e.OkresDeklaracjiTo >= @OkresFrom
+                     AND e.OkresDeklaracjiTo <= @OkresTo
+                   ORDER BY e.OkresDeklaracjiTo DESC, e.ID DESC
+               ),
+               (
+                   SELECT TOP (1) CAST(d.Bufor AS bit)
+                   FROM {dbQuoted}.dbo.Deklaracje d
+                   WHERE d.Typ IN (
+                         SELECT TRY_CONVERT(int, LTRIM(RTRIM(S.value)))
+                         FROM string_split(@TypIFTCsv, N',') AS S
+                         WHERE TRY_CONVERT(int, LTRIM(RTRIM(S.value))) IS NOT NULL
+                   )
+                     AND d.Zrodlo IS NULL
+                     AND d.OkresTo >= @OkresFrom
+                     AND d.OkresTo <= @OkresTo
+                   ORDER BY d.OkresTo DESC, d.ID DESC
+               ),
+               (
+                   SELECT TOP (1) e.StatusEDeklaracji
+                   FROM {dbQuoted}.dbo.EDeklaracje e
+                   WHERE e.TypDeklaracji IN (
+                         SELECT TRY_CONVERT(int, LTRIM(RTRIM(S.value)))
+                         FROM string_split(@TypIFTCsv, N',') AS S
+                         WHERE TRY_CONVERT(int, LTRIM(RTRIM(S.value))) IS NOT NULL
+                   )
                      AND e.OkresDeklaracjiTo >= @OkresFrom
                      AND e.OkresDeklaracjiTo <= @OkresTo
                    ORDER BY e.OkresDeklaracjiTo DESC, e.ID DESC
@@ -328,8 +398,8 @@ BEGIN TRY
     END
 END TRY
 BEGIN CATCH
-    INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int)
-    VALUES (N'{dbLiteral}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    INSERT INTO @results(DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int, DeklaracjaIFTBufor, EDeklaracjaIFTInt)
+    VALUES (N'{dbLiteral}', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 END CATCH");
         }
 
@@ -344,10 +414,12 @@ DECLARE @results TABLE (
     DeklaracjaPIT4RBufor bit NULL,
     EDeklaracjaPIT4RInt int NULL,
     DeklaracjaCIT8Bufor bit NULL,
-    EDeklaracjaCIT8Int int NULL
+    EDeklaracjaCIT8Int int NULL,
+    DeklaracjaIFTBufor bit NULL,
+    EDeklaracjaIFTInt int NULL
 );
 {string.Join(Environment.NewLine, parts)}
-SELECT DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int
+SELECT DatabaseName, StatusJPKInt, DeklaracjaVATUEBufor, EDeklaracjaVATUEInt, DeklaracjaPIT8ARBufor, EDeklaracjaPIT8ARInt, DeklaracjaPIT4RBufor, EDeklaracjaPIT4RInt, DeklaracjaCIT8Bufor, EDeklaracjaCIT8Int, DeklaracjaIFTBufor, EDeklaracjaIFTInt
 FROM @results;";
     }
 
@@ -363,10 +435,33 @@ FROM @results;";
 
     private static int GetTypDeklaracjiValue(string enumName)
     {
-        Type type = Type.GetType("Soneta.Deklaracje.TypDeklaracji,Soneta.Deklaracje", throwOnError: false)
-            ?? throw new InvalidOperationException("Nie znaleziono typu Soneta.Deklaracje.TypDeklaracji.");
+        Type type = GetTypDeklaracjiType();
         object value = Enum.Parse(type, enumName, ignoreCase: false);
         return Convert.ToInt32(value);
+    }
+
+    private static int[] GetTypDeklaracjiValuesByPrefix(string prefix, string fallbackEnumName = null)
+    {
+        Type type = GetTypDeklaracjiType();
+        int[] values = Enum.GetNames(type)
+            .Where(n => n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .Select(n => Convert.ToInt32(Enum.Parse(type, n, ignoreCase: false)))
+            .Distinct()
+            .OrderBy(v => v)
+            .ToArray();
+
+        if (values.Length == 0 && !string.IsNullOrWhiteSpace(fallbackEnumName))
+        {
+            return new[] { GetTypDeklaracjiValue(fallbackEnumName) };
+        }
+
+        return values;
+    }
+
+    private static Type GetTypDeklaracjiType()
+    {
+        return Type.GetType("Soneta.Deklaracje.TypDeklaracji,Soneta.Deklaracje", throwOnError: false)
+               ?? throw new InvalidOperationException("Nie znaleziono typu Soneta.Deklaracje.TypDeklaracji.");
     }
 
     private static string ToStatusCaption(int? statusCode)
@@ -444,6 +539,13 @@ FROM @results;";
             valuesDictionary[descriptor.Name] = calculatedValue;
         }
 
+        foreach (PropertyDescriptor descriptor in CustomCalculatedPropertyDescriptors)
+        {
+            string value = valuesToSet.TryGetValue(descriptor.Name, out string selectedValue) ? selectedValue : null;
+            object calculatedValue = calculatedValueCtor.Invoke(new object[] { descriptor, value });
+            valuesDictionary[descriptor.Name] = calculatedValue;
+        }
+
         if (updateCalculationMetadata)
         {
             TrySetProperty(extenderType, extender, "LastCalculationActual", actual);
@@ -460,6 +562,134 @@ FROM @results;";
         }
         catch
         {
+        }
+    }
+
+    private static bool TryGetCachedValues(string databaseName, Date aktualny, FromTo okres, out Dictionary<string, string> values)
+    {
+        string scopeKey = BuildScopeKey(aktualny, okres);
+        lock (cacheSync)
+        {
+            if (!string.Equals(cachedScopeKey, scopeKey, StringComparison.Ordinal))
+            {
+                values = null;
+                return false;
+            }
+
+            if (!cachedValuesByDatabase.TryGetValue(databaseName, out Dictionary<string, string> cached))
+            {
+                values = null;
+                return false;
+            }
+
+            values = new Dictionary<string, string>(cached, StringComparer.Ordinal);
+            return true;
+        }
+    }
+
+    private static string BuildScopeKey(Date aktualny, FromTo okres)
+    {
+        return $"{aktualny:yyyyMMdd}|{okres.From:yyyyMMdd}|{okres.To:yyyyMMdd}";
+    }
+
+    private static readonly PropertyDescriptor[] CustomCalculatedPropertyDescriptors = new PropertyDescriptor[]
+    {
+        new CustomCalculatedPropertyDescriptor("DeklaracjaIFT", "Deklaracja IFT", "Status deklaracji IFT*"),
+        new CustomCalculatedPropertyDescriptor("EDeklaracjaIFT", "E deklaracja IFT", "Status e‑deklaracji IFT*")
+    };
+
+    private static int customCalculatedPropsRegistered;
+
+    internal static void EnsureCustomCalculatedPropertiesRegistered()
+    {
+        if (Interlocked.Exchange(ref customCalculatedPropsRegistered, 1) != 0)
+        {
+            return;
+        }
+
+        TypeDescriptor.AddAttributes(typeof(DBItem.Extender), new TypeConverterAttribute(typeof(DBItemExtenderWithCustomPropsConverter)));
+    }
+
+    private sealed class DBItemExtenderWithCustomPropsConverter : TypeConverter, IConverterWithContext
+    {
+        private static readonly IConverterWithContext baseConverter = new DBItem.ExtenderConverter();
+
+        public bool IsAcceptNullContext => false;
+
+        public PropertyDescriptorCollection GetProperties(object value, Context context)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            return GetProperties(value.GetType(), context);
+        }
+
+        public PropertyDescriptorCollection GetProperties(Type type, Context context)
+        {
+            PropertyDescriptorCollection baseProperties = baseConverter.GetProperties(type, context);
+            List<PropertyDescriptor> all = new List<PropertyDescriptor>(baseProperties.Cast<PropertyDescriptor>());
+            foreach (PropertyDescriptor descriptor in CustomCalculatedPropertyDescriptors)
+            {
+                if (all.Any(d => string.Equals(d.Name, descriptor.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+                all.Add(descriptor);
+            }
+
+            return new PropertyDescriptorCollection(all.ToArray(), readOnly: true);
+        }
+    }
+
+    private sealed class CustomCalculatedPropertyDescriptor : PropertyDescriptor
+    {
+        private readonly string caption;
+        private readonly string description;
+
+        public CustomCalculatedPropertyDescriptor(string name, string caption, string description)
+            : base(name, new Attribute[]
+            {
+                new CaptionAttribute(caption),
+                new DescriptionAttribute(description)
+            })
+        {
+            this.caption = caption;
+            this.description = description;
+        }
+
+        public override bool IsReadOnly => true;
+
+        public override Type PropertyType => typeof(string);
+
+        public override Type ComponentType => typeof(DBItem.Extender);
+
+        public override string Description => description;
+
+        public override string DisplayName => caption;
+
+        public override bool CanResetValue(object component)
+        {
+            return false;
+        }
+
+        public override object GetValue(object component)
+        {
+            return component is DBItem.Extender extender ? extender[Name] : null;
+        }
+
+        public override void ResetValue(object component)
+        {
+        }
+
+        public override void SetValue(object component, object value)
+        {
+        }
+
+        public override bool ShouldSerializeValue(object component)
+        {
+            return false;
         }
     }
 }

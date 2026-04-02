@@ -45,4 +45,14 @@ using PNWB_Extra.UI.Models;
     ObjectPage = "DynamiczneDaneCalaEnovaRoot.Ogolne.pageform.xml",
     ReadOnlySession = true,
     ConfigSession = true)]
+
+[assembly: FolderView("Analizy baz danych Extra/CfgAttributes cała enova",
+    Priority = 50,
+    GroupIndex = 1,
+    Description = "Zbiorczy widok CfgAttributes dla wybranej ścieżki CfgNodes ze wszystkich baz enova",
+    IconName = "ustawienia",
+    ObjectType = typeof(CfgAttributesCalaEnovaRoot),
+    ObjectPage = "CfgAttributesCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
 namespace PNWB_Extra.UI.Navigation;

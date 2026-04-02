@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataForm xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.enova.pl/schema/form.xsd"
+          DataType="PNWB_Extra.UI.Models.CfgAttributesCalaEnovaRoot, PNWB_Extra.UI">
+  <Page CaptionHtml="Ogólne" DataContext="{DataSource}">
+    <Row>
+      <Field CaptionHtml="Baza źródłowa" Width="28" EditValue="{BazaZrodlowa}" />
+      <Field CaptionHtml="Węzeł 1" Width="16" EditValue="{Wezel1}" />
+      <Field CaptionHtml="Węzeł 2" Width="16" EditValue="{Wezel2}" />
+      <Field CaptionHtml="Węzeł 3" Width="16" EditValue="{Wezel3}" />
+    </Row>
+    <Row>
+      <Field CaptionHtml="Węzeł 4" Width="16" EditValue="{Wezel4}" />
+      <Field CaptionHtml="Węzeł 5" Width="16" EditValue="{Wezel5}" />
+      <Field CaptionHtml="Węzeł 6" Width="16" EditValue="{Wezel6}" />
+      <Field CaptionHtml="Węzeł 7" Width="16" EditValue="{Wezel7}" />
+    </Row>
+    <Row>
+      <Field CaptionHtml="Węzeł 8" Width="16" EditValue="{Wezel8}" />
+      <Field CaptionHtml="Węzeł 9" Width="16" EditValue="{Wezel9}" />
+      <Field CaptionHtml="Węzeł 10" Width="16" EditValue="{Wezel10}" />
+    </Row>
+    <Row>
+      <Grid Name="ListCfgAttributesV1" Width="*" Height="*" EditValue="{ViewInfo}" IsToolbarVisible="true" EditButton="None" UpdateButton="None" NewButton="None" RemoveButton="None">
+        <Field CaptionHtml="Nazwa firmy" Width="20" EditValue="{NazwaFirmy}" Footer="None" />
+        <Field CaptionHtml="ID" Width="8" EditValue="{ID}" Footer="None" />
+        <Field CaptionHtml="NodeID" Width="8" EditValue="{Node}" Footer="None" />
+        <Field CaptionHtml="NodeGuid" Width="24" EditValue="{NodeGuid}" Footer="None" />
+        <Field CaptionHtml="NodeParent" Width="10" EditValue="{NodeParent}" Footer="None" />
+        <Field CaptionHtml="NodeName" Width="22" EditValue="{NodeName}" Footer="None" />
+        <Field CaptionHtml="NodeType" Width="10" EditValue="{NodeType}" Footer="None" />
+        <Field CaptionHtml="Name" Width="22" EditValue="{Name}" Footer="None" />
+        <Field CaptionHtml="Type" Width="8" EditValue="{Type}" Footer="None" />
+        <Field CaptionHtml="StrValue" Width="30" EditValue="{StrValue}" Footer="None" />
+        <Field CaptionHtml="MemoValue" Width="30" EditValue="{MemoValue}" Footer="None" />
+        <Field CaptionHtml="Stamp" Width="16" EditValue="{Stamp}" Footer="None" />
+        <Field CaptionHtml="Węzeł 1" Width="14" EditValue="{Wezel1}" Footer="None" />
+        <Field CaptionHtml="Węzeł 2" Width="14" EditValue="{Wezel2}" Footer="None" />
+        <Field CaptionHtml="Węzeł 3" Width="14" EditValue="{Wezel3}" Footer="None" />
+        <Field CaptionHtml="Węzeł 4" Width="14" EditValue="{Wezel4}" Footer="None" />
+        <Field CaptionHtml="Węzeł 5" Width="14" EditValue="{Wezel5}" Footer="None" />
+        <Field CaptionHtml="Węzeł 6" Width="14" EditValue="{Wezel6}" Footer="None" />
+        <Field CaptionHtml="Węzeł 7" Width="14" EditValue="{Wezel7}" Footer="None" />
+        <Field CaptionHtml="Węzeł 8" Width="14" EditValue="{Wezel8}" Footer="None" />
+        <Field CaptionHtml="Węzeł 9" Width="14" EditValue="{Wezel9}" Footer="None" />
+        <Field CaptionHtml="Węzeł 10" Width="14" EditValue="{Wezel10}" Footer="None" />
+      </Grid>
+    </Row>
+  </Page>
+</DataForm>

@@ -55,4 +55,14 @@ using PNWB_Extra.UI.Models;
     ObjectPage = "CfgAttributesCalaEnovaRoot.Ogolne.pageform.xml",
     ReadOnlySession = true,
     ConfigSession = true)]
+
+[assembly: FolderView("Analizy baz danych Extra/Unicode cała enova",
+    Priority = 60,
+    GroupIndex = 1,
+    Description = "Zbiorczy status kolumny SystemInfos.Value (Unicode/VARCHAR) we wszystkich bazach enova",
+    IconName = "sql",
+    ObjectType = typeof(UnicodeCalaEnovaRoot),
+    ObjectPage = "UnicodeCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
 namespace PNWB_Extra.UI.Navigation;

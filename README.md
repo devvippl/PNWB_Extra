@@ -10,6 +10,8 @@ Menu dodatku:
 - `Analizy baz danych Extra/Systemy zewnętrzne cała enova`
 - `Analizy baz danych Extra/Tokeny cała enova`
 - `Analizy baz danych Extra/Dynamiczne dane cała enova`
+- `Analizy baz danych Extra/Unicode cała enova`
+- `Analizy baz danych Extra/Optymalizacja rozmiaru bazy MS SQL`
 
 ### 1) Analizy baz danych Extra
 
@@ -65,6 +67,20 @@ Akcje:
   - działa wyłącznie dla `Kolumna = *`,
   - wymaga klucza głównego (PK) w obiekcie SQL,
   - aktualizuje tylko kolumny faktycznie zmienione.
+
+### 5) Optymalizacja rozmiaru bazy MS SQL
+
+Zbiorcza lista baz z `DBItems` z kolumnami:
+
+- `Rozmiar bazy [MB]`
+- `Rozmiar log [MB]`
+
+Akcje:
+
+- `Oblicz Extra` - odczyt rozmiaru plików danych/log z SQL.
+- `Optymalizacja rozmiaru bazy Extra` - dla zaznaczonych baz wykonuje kolejno:
+  - przebudowę indeksów (`RepairIndexes`),
+  - zmniejszenie rozmiaru bazy (`Backup` z `Shrink = true`, bez tworzenia pliku backupu).
 
 ## Build
 

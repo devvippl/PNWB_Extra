@@ -149,15 +149,7 @@ public sealed class TokenyCalaEnovaObliczExtraWorker
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = "PNWB_Extra.TokenyCalaEnova",
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, "PNWB_Extra.TokenyCalaEnova");
     }
 
     private static string BuildTokenyBatchSql(string masterDatabaseName)

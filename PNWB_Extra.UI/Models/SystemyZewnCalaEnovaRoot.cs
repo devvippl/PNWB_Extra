@@ -281,15 +281,7 @@ FROM @updated;";
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase, string appName)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = appName,
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, appName);
     }
 
     private static object DbValue(object value)

@@ -256,15 +256,7 @@ public sealed class DBItemsObliczExtraWorker
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = "PNWB_Extra.ObliczExtraSQL",
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, "PNWB_Extra.ObliczExtraSQL");
     }
 
     private static string BuildCalculatedStatusesBatchSql(IEnumerable<string> databaseNames)

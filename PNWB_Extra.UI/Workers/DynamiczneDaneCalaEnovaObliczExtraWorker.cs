@@ -136,15 +136,7 @@ public sealed class DynamiczneDaneCalaEnovaObliczExtraWorker
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = "PNWB_Extra.DynamiczneDaneCalaEnova",
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, "PNWB_Extra.DynamiczneDaneCalaEnova");
     }
 
     private static string BuildBatchSql(string masterDatabaseName, DynamiczneDaneSelection selection)

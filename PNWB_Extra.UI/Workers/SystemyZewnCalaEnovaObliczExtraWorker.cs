@@ -140,15 +140,7 @@ public sealed class SystemyZewnCalaEnovaObliczExtraWorker
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = "PNWB_Extra.SystemyZewnCalaEnova",
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, "PNWB_Extra.SystemyZewnCalaEnova");
     }
 
     private static string BuildSystemyZewnBatchSql(string masterDatabaseName)

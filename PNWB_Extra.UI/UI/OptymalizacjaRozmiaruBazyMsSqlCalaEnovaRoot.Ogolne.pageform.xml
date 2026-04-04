@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataForm xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.enova.pl/schema/form.xsd"
+          DataType="PNWB_Extra.UI.Models.OptymalizacjaRozmiaruBazyMsSqlCalaEnovaRoot, PNWB_Extra.UI">
+  <Page CaptionHtml="Ogólne" DataContext="{DataSource}">
+    <Row>
+      <Grid Width="*" Height="*" EditValue="{ViewInfo}" IsToolbarVisible="true" EditButton="None" UpdateButton="None" NewButton="None" RemoveButton="None">
+        <Field CaptionHtml="Nazwa firmy" Width="35" EditValue="{NazwaFirmy}" Footer="None" />
+        <Field CaptionHtml="Rozmiar bazy [MB]" Width="15" EditValue="{RozmiarBazyMB}" Footer="None" />
+        <Field CaptionHtml="Rozmiar log [MB]" Width="15" EditValue="{RozmiarLogMB}" Footer="None" />
+        <Field CaptionHtml="Informacja" Width="35" EditValue="{ErrorMessage}" Footer="None" />
+      </Grid>
+    </Row>
+  </Page>
+</DataForm>

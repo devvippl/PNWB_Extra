@@ -65,4 +65,14 @@ using PNWB_Extra.UI.Models;
     ObjectPage = "UnicodeCalaEnovaRoot.Ogolne.pageform.xml",
     ReadOnlySession = true,
     ConfigSession = true)]
+
+[assembly: FolderView("Analizy baz danych Extra/Optymalizacja rozmiaru bazy MS SQL",
+    Priority = 70,
+    GroupIndex = 1,
+    Description = "Zbiorcza optymalizacja rozmiaru baz MS SQL we wszystkich bazach enova z DBItems",
+    IconName = "sql",
+    ObjectType = typeof(OptymalizacjaRozmiaruBazyMsSqlCalaEnovaRoot),
+    ObjectPage = "OptymalizacjaRozmiaruBazyMsSqlCalaEnovaRoot.Ogolne.pageform.xml",
+    ReadOnlySession = true,
+    ConfigSession = true)]
 namespace PNWB_Extra.UI.Navigation;

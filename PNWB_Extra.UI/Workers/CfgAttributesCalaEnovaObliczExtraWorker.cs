@@ -310,15 +310,7 @@ WHERE 1 = 1
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = "PNWB_Extra.CfgAttributesCalaEnova",
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, "PNWB_Extra.CfgAttributesCalaEnova");
     }
 
     private static string ReadString(SqlDataReader reader, int index)

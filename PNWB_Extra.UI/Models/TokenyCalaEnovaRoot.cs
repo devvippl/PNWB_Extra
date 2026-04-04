@@ -176,6 +176,9 @@ public sealed class TokenyCalaEnovaRoot : ISessionable
             row.RefreshTokenRequestRefNumber ?? string.Empty,
             row.WersjaAPI ?? string.Empty,
             row.Rodzaj?.ToString() ?? string.Empty,
+            row.Certyfikat ?? string.Empty,
+            row.CertyfikatKey ?? string.Empty,
+            row.CertyfikatHasloValue ?? string.Empty,
             row.Przeznaczenie?.ToString() ?? string.Empty);
     }
 
@@ -186,6 +189,33 @@ public sealed class TokenyCalaEnovaRoot : ISessionable
         command.CommandType = CommandType.Text;
         command.CommandText = $@"
 DECLARE @updated TABLE (Stamp varbinary(8));
+DECLARE @CertyfikatBin varbinary(max) = NULL;
+DECLARE @CertyfikatKeyBin varbinary(max) = NULL;
+DECLARE @CertyfikatHasloValueBin varbinary(max) = NULL;
+DECLARE @CertyfikatText nvarchar(max) = NULLIF(LTRIM(RTRIM(@Certyfikat)), N'');
+DECLARE @CertyfikatKeyText nvarchar(max) = NULLIF(LTRIM(RTRIM(@CertyfikatKey)), N'');
+DECLARE @CertyfikatHasloValueText nvarchar(max) = NULLIF(LTRIM(RTRIM(@CertyfikatHasloValue)), N'');
+
+IF @CertyfikatText IS NOT NULL
+BEGIN
+    SET @CertyfikatBin = TRY_CONVERT(varbinary(max), @CertyfikatText, 1);
+    IF @CertyfikatBin IS NULL
+        THROW 50001, N'Pole Certyfikat ma nieprawidłowy format. Oczekiwany HEX, np. 0xABCD.', 1;
+END
+
+IF @CertyfikatKeyText IS NOT NULL
+BEGIN
+    SET @CertyfikatKeyBin = TRY_CONVERT(varbinary(max), @CertyfikatKeyText, 1);
+    IF @CertyfikatKeyBin IS NULL
+        THROW 50002, N'Pole CertyfikatKey ma nieprawidłowy format. Oczekiwany HEX, np. 0xABCD.', 1;
+END
+
+IF @CertyfikatHasloValueText IS NOT NULL
+BEGIN
+    SET @CertyfikatHasloValueBin = TRY_CONVERT(varbinary(max), @CertyfikatHasloValueText, 1);
+    IF @CertyfikatHasloValueBin IS NULL
+        THROW 50003, N'Pole CertyfikatHasloValue ma nieprawidłowy format. Oczekiwany HEX, np. 0xABCD.', 1;
+END
 
 UPDATE T
 SET T.SystemZewn = @SystemZewn,
@@ -198,6 +228,9 @@ SET T.SystemZewn = @SystemZewn,
     T.RefreshTokenRequestRefNumber = @RefreshTokenRequestRefNumber,
     T.WersjaAPI = @WersjaAPI,
     T.Rodzaj = @Rodzaj,
+    T.Certyfikat = @CertyfikatBin,
+    T.CertyfikatKey = @CertyfikatKeyBin,
+    T.CertyfikatHasloValue = @CertyfikatHasloValueBin,
     T.Przeznaczenie = @Przeznaczenie
 OUTPUT inserted.Stamp INTO @updated(Stamp)
 FROM {dbQuoted}.dbo.SysZewTokeny T
@@ -218,6 +251,9 @@ FROM @updated;";
         command.Parameters.Add(new SqlParameter("@RefreshTokenRequestRefNumber", SqlDbType.NVarChar, 255) { Value = DbValue(row.RefreshTokenRequestRefNumber) });
         command.Parameters.Add(new SqlParameter("@WersjaAPI", SqlDbType.NVarChar, 64) { Value = DbValue(row.WersjaAPI) });
         command.Parameters.Add(new SqlParameter("@Rodzaj", SqlDbType.Int) { Value = DbValue(row.Rodzaj) });
+        command.Parameters.Add(new SqlParameter("@Certyfikat", SqlDbType.NVarChar) { Value = DbValue(row.Certyfikat) });
+        command.Parameters.Add(new SqlParameter("@CertyfikatKey", SqlDbType.NVarChar) { Value = DbValue(row.CertyfikatKey) });
+        command.Parameters.Add(new SqlParameter("@CertyfikatHasloValue", SqlDbType.NVarChar) { Value = DbValue(row.CertyfikatHasloValue) });
         command.Parameters.Add(new SqlParameter("@Przeznaczenie", SqlDbType.Int) { Value = DbValue(row.Przeznaczenie) });
         command.Parameters.Add(new SqlParameter("@Guid", SqlDbType.NVarChar, 64) { Value = DbValue(row.Guid) });
         command.Parameters.Add(new SqlParameter("@ID", SqlDbType.Int) { Value = DbValue(row.ID) });
@@ -234,15 +270,7 @@ FROM @updated;";
 
     private static SqlConnection CreateSqlConnection(SqlDatabase sqlDatabase, string appName)
     {
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = sqlDatabase.Server,
-            InitialCatalog = sqlDatabase.DatabaseName,
-            IntegratedSecurity = true,
-            ApplicationName = appName,
-            TrustServerCertificate = true
-        };
-        return new SqlConnection(builder.ConnectionString);
+        return PnwbSqlConnectionFactory.Create(sqlDatabase, appName);
     }
 
     private static object DbValue(object value)
@@ -322,13 +350,10 @@ public sealed class TokenCalaEnovaRow
 
     public int? Rodzaj { get; set; }
 
-    [ReadOnly(true)]
     public string Certyfikat { get; set; }
 
-    [ReadOnly(true)]
     public string CertyfikatKey { get; set; }
 
-    [ReadOnly(true)]
     public string CertyfikatHasloValue { get; set; }
 
     public int? Przeznaczenie { get; set; }
@@ -377,6 +402,9 @@ public sealed class TokenCalaEnovaRow
         RefreshTokenRequestRefNumber = source.RefreshTokenRequestRefNumber;
         WersjaAPI = source.WersjaAPI;
         Rodzaj = source.Rodzaj;
+        Certyfikat = source.Certyfikat;
+        CertyfikatKey = source.CertyfikatKey;
+        CertyfikatHasloValue = source.CertyfikatHasloValue;
         Przeznaczenie = source.Przeznaczenie;
     }
 }
